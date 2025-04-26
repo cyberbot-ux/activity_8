@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Alive Village</title>
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden;
+      font-family: sans-serif;
+      background: skyblue;
+      transition: background 1s;
+    }
+
+    /* Sky and elements */
+    .village_sky {
+      width: 100%;
+      height: 100vh;
+      position: relative;
+    }
+
+    #sun_circle, #moon_circle {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      position: absolute;
+      top: 40px;
+      transition: all 1s;
+    }
+
+    #sun_circle {
+      background: yellow;
+      box-shadow: 0 0 40px 15px yellow;
+      left: 50px;
+    }
+
+    #moon_circle {
+      background: white;
+      box-shadow: 0 0 20px 10px white;
+      left: 90%;
+      display: none;
+    }
+
+    .sky_stars {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 0;
+      display: none;
+    }
+
+    .star_dot {
+      position: absolute;
+      width: 2px;
+      height: 2px;
+      background: white;
+      border-radius: 50%;
+      animation: twinkle 2s infinite alternate;
+    }
+
+    @keyframes twinkle {
+      from { opacity: 0.3; }
+      to { opacity: 1; }
+    }
+
+    /* Moving clouds */
+    .cloud {
+  width: 120px;
+  height: 60px;
+  background: white;
+  border-radius: 50%;
+  position: absolute;
+  top: 100px;
+  left: -200px; /* starts off screen */
+  animation: movecloud 60s linear infinite;
+  opacity: 0.85;
+  animation-fill-mode: forwards;
+}
+
+    .cloud::before, .cloud::after {
+      content: "";
+      position: absolute;
+      background: white;
+      border-radius: 50%;
+    }
+
+    .cloud::before {
+      width: 80px;
+      height: 80px;
+      left: -40px;
+      top: -20px;
+    }
+
+    .cloud::after {
+      width: 60px;
+      height: 60px;
+      left: 60px;
+      top: -10px;
+    }
+
+    @keyframes movecloud {
+      from { left: -200px; }
+      to { left: 110%; }
+    }
+
+    /* Ground and road */
+    .village_ground {
+      position: absolute;
+      bottom: 0;
+      width: 100%;
+      height: 200px;
+      background: green;
+      z-index: 1;
+    }
+
+    .village_road {
+      position: absolute;
+      bottom: 80px;
+      width: 100%;
+      height: 40px;
+      background: #444;
+      z-index: 2;
+    }
+
+    /* Houses */
+    .village_house {
+      width: 100px;
+      height: 100px;
+      background: #8B4513;
+      border: 3px solid #4d2e1f;
+      position: absolute;
+      bottom: 120px;
+      z-index: 3;
+    }
+
+    .house_roof {
+      width: 0;
+      height: 0;
+      border-left: 55px solid transparent;
+      border-right: 55px solid transparent;
+      border-bottom: 40px solid darkred;
+      position: absolute;
+      top: -40px;
+      left: -5px;
+    }
+
+    .house_chimney {
+      width: 10px;
+      height: 25px;
+      background: #333;
+      position: absolute;
+      top: -25px;
+      left: 20px;
+    }
+
+    .house_door {
+      width: 20px;
+      height: 35px;
+      background: #5c4033;
+      position: absolute;
+      bottom: 5px;
+      left: 10px;
+      border: 2px solid #2e1f13;
+    }
+
+    .house_window {
+      width: 20px;
+      height: 20px;
+      background: #add8e6;
+      border: 2px solid black;
+      position: absolute;
+      top: 25px;
+      left: 60px;
+      transition: background 1s;
+    }
+
+    /* Button */
+    #toggle_btn {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      padding: 10px 25px;
+      font-size: 18px;
+      background: #222;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      z-index: 10;
+    }
+
+    #toggle_btn.day {
+      background: orange;
+      color: black;
+    }
+  </style>
+</head>
+<body>
+
+<div class="village_sky">
+  <div id="sun_circle"></div>
+  <div id="moon_circle"></div>
+  <div class="sky_stars" id="sky_stars"></div>
+
+  <div class="cloud" style="left: 0%; animation-delay: 0s;"></div>
+  <div class="cloud" style="left: 0%; animation-delay: -10s;"></div>
+  <div class="cloud" style="left: 0%; animation-delay: -20s;"></div>
+</div>
+
+<div class="village_ground"></div>
+<div class="village_road"></div>
+
+<!-- Houses -->
+<div class="village_house" style="left: 100px;">
+  <div class="house_roof"></div>
+  <div class="house_chimney"></div>
+  <div class="house_window"></div>
+  <div class="house_door"></div>
+</div>
+<div class="village_house" style="left: 250px;">
+  <div class="house_roof"></div>
+  <div class="house_chimney"></div>
+  <div class="house_window"></div>
+  <div class="house_door"></div>
+</div>
+<div class="village_house" style="left: 400px;">
+  <div class="house_roof"></div>
+  <div class="house_chimney"></div>
+  <div class="house_window"></div>
+  <div class="house_door"></div>
+</div>
+
+<!-- Toggle Button -->
+<button id="toggle_btn" onclick="toggle_day_night()">Switch to Night</button>
+
+<script>
+let is_day = true;
+
+// generate stars
+const stars = document.getElementById('sky_stars');
+for (let i = 0; i < 120; i++) {
+  const star = document.createElement('div');
+  star.className = 'star_dot';
+  star.style.top = Math.random() * 100 + '%';
+  star.style.left = Math.random() * 100 + '%';
+  stars.appendChild(star);
+}
+
+function toggle_day_night() {
+  const body = document.body;
+  const sun = document.getElementById('sun_circle');
+  const moon = document.getElementById('moon_circle');
+  const stars = document.getElementById('sky_stars');
+  const windows = document.querySelectorAll('.house_window');
+  const btn = document.getElementById('toggle_btn');
+
+  is_day = !is_day;
+
+  if (is_day) {
+    body.style.background = 'skyblue';
+    sun.style.display = 'block';
+    moon.style.display = 'none';
+    stars.style.display = 'none';
+    windows.forEach(w => w.style.background = '#add8e6');
+    btn.textContent = "Switch to Night";
+    btn.classList.remove('day');
+  } else {
+    body.style.background = '#111';
+    sun.style.display = 'none';
+    moon.style.display = 'block';
+    stars.style.display = 'block';
+    windows.forEach(w => w.style.background = 'yellow');
+    btn.textContent = "Switch to Day";
+    btn.classList.add('day');
+  }
+}
+</script>
+
+</body>
+</html>
